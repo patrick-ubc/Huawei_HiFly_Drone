@@ -73,17 +73,17 @@ class ModelProcessor(BaseProcessor):
             draw = ImageDraw.Draw(origin_img)
             font = ImageFont.load_default()
             draw.text((10, 50), object_class, font=font, fill=255)
-            return np.array(origin_img)
+            return np.array(origin_img), object_class
 
-        return np.array(origin_img)
+        return np.array(origin_img), "No gesture"
     
     def predict(self, frame):
         cv2.imwrite(self._tmp_file, frame)
         self._acl_image = AclImage(self._tmp_file)
         resized_image = self.preprocess(self._acl_image)
         infer_out = self.model.execute([resized_image,])
-        result = self.postprocess(infer_out, frame)
-        return result
+        result, command = self.postprocess(infer_out, frame)
+        return result, command
 
     def get_gesture_categories(self, gesture_id):
         if gesture_id >= len(ModelProcessor.gesture_categories):

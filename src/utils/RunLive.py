@@ -5,6 +5,7 @@ import sys
 import time
 import _thread
 from importlib import import_module
+from queue import Queue
 
 from utils.uav_utils import  manual_control
 from atlas_utils.presenteragent import presenter_channel
@@ -19,6 +20,9 @@ class LiveRunner:
         self.selector = selector
         self.model_params = params["task"][self.selector.task][self.selector.model]
         self.uav_presenter_conf = params["presenter_server_conf"]
+        self.beforeCommand = "0"
+        self.command = "No gesture"
+        self.queue = Queue()
 
     def init_model_processor(self):
         # Initialize ModuleProcessor based on params[model]
@@ -35,9 +39,15 @@ class LiveRunner:
     def engage_manual_control(self):
         # start new thread for manual control
         try:
-            _thread.start_new_thread(manual_control, (self.uav, ))
+            _thread.start_new_thread(manual_control, (self.uav, self.queue))
         except:
             print("Error: unable to start thread")
+
+    def getCommand(self):
+        if self.beforeCommand != self.command:
+            self.beforeCommand = self.command
+            self.queue.put(self.command)
+        return self.command
 
     def display_result(self):
         self.init_model_processor()
@@ -56,12 +66,20 @@ class LiveRunner:
         while True:
             ## Read one frame from stream ##
             frame_org = self.uav.get_frame_read().frame
-            assert frame_org is not None, "Error: Tello video capture failed, frame is None"
-
+            if frame_org is None:
+                time.sleep(100)
+                continue
+            # assert frame_org is not None, "Error: Tello video capture failed, frame is None"
+            # print(frame_org)
             ## Model Prediction ##
-            result_img = self.model_processor.predict(frame_org)
+            
+            try:
+                result_img, self.command = self.model_processor.predict(frame_org)
+                self.getCommand()
 
-            """ Display inference results and send to presenter channel """
-            _, jpeg_image = cv2.imencode('.jpg', result_img)
-            jpeg_image = AclImage(jpeg_image, frame_org.shape[0], frame_org.shape[1], jpeg_image.size)
-            chan.send_detection_data(frame_org.shape[0], frame_org.shape[1], jpeg_image, [])
+                """ Display inference results and send to presenter channel """
+                _, jpeg_image = cv2.imencode('.jpg', result_img)
+                jpeg_image = AclImage(jpeg_image, frame_org.shape[0], frame_org.shape[1], jpeg_image.size)
+                chan.send_detection_data(frame_org.shape[0], frame_org.shape[1], jpeg_image, [])
+            except:
+                pass

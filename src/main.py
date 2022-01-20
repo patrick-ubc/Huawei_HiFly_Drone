@@ -30,6 +30,8 @@ if __name__ == '__main__':
     # Connect to Tello drone
     uav = connect_uav()
 
+    # print('params', params)
+    # print('selector', selector)
     runner = LiveRunner(uav, params, selector)
     # needed to fully connect to presenter server?
     time.sleep(10)

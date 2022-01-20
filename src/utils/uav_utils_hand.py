@@ -38,38 +38,7 @@ def manual_control(uav, q):
 
     while True:
         val = q.get()
-        print(val)
         if val == '3':
             uav.takeoff()
         elif val == '2':
-            uav.land() 
-    
-    with Input(keynames='curses') as input_generator:
-        for key in input_generator:
-            try:
-                if key == 'w':
-                    uav.move_forward(30)
-                elif key == 'a':
-                    uav.move_left(30)
-                elif key == 's':
-                    uav.move_back(30)
-                elif key == 'd':
-                    uav.move_right(30)
-                elif key == 'e':
-                    uav.rotate_clockwise(30)
-                elif key == 'q':
-                    uav.rotate_counter_clockwise(30)
-                elif key == 'KEY_UP':
-                    uav.move_up(30)
-                elif key == 'KEY_DOWN':
-                    uav.move_down(30)
-                elif key == 't':
-                    uav.takeoff()
-                elif key == 'l':
-                    uav.land()
-                else:
-                    print("Unknown key: {}".format(key))
-            except:
-                print("something wrong; key: " + key)
-    # land after a few second ?
-    uav.land()
+            uav.land()  

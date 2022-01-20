@@ -30,6 +30,7 @@ class BaseProcessor:
         self.model = Model(params['model_path'])
 
     def validate(self):
+        # print(self.params['model_path'])
         if not os.path.exists(self.params['model_path']):
             raise FileNotFoundError('Model Path not found, please check again.')
         if 'model_width' not in self.params or 'model_height' not in self.params:
